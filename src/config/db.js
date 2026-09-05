@@ -14,7 +14,28 @@ pool.on("error", (err) => {
   process.exit(1);
 });
 
+/**
+ * Runs a set of queries inside a single transaction. Pass an async function
+ * that receives a client and does its queries with client.query(...).
+ * Commits on success, rolls back automatically if anything throws.
+ */
+async function withTransaction(callback) {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const result = await callback(client);
+    await client.query("COMMIT");
+    return result;
+  } catch (err) {
+    await client.query("ROLLBACK");
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
 module.exports = {
   query: (text, params) => pool.query(text, params),
   pool,
+  withTransaction,
 };
