@@ -1,3 +1,9 @@
 const router = require("express").Router();
-router.get("/_placeholder", (req, res) => res.json({ message: "payment routes coming in Phase 6" }));
+const controller = require("../controllers/payment.controller");
+const { requireAuth, requireRole } = require("../middleware/auth.middleware");
+
+router.post("/create-order", requireAuth, requireRole("customer"), controller.createPaymentOrder);
+router.post("/verify", requireAuth, requireRole("customer"), controller.verifyPayment);
+router.get("/status/:orderId", requireAuth, controller.getPaymentStatus);
+
 module.exports = router;
